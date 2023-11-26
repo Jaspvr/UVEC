@@ -7,7 +7,7 @@ pygame.init()
 # Constants
 WIDTH, HEIGHT = 800, 600
 PUCK_RADIUS = 15
-#PADDLE_WIDTH, PADDLE_HEIGHT = 15, 100
+PADDLE_WIDTH, PADDLE_HEIGHT = 15, 100
 FPS = 60
 
 # Colors
@@ -18,6 +18,20 @@ BLACK = (0, 0, 0)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Air Hockey")
 clock = pygame.time.Clock()
+
+
+class Paddle:
+    def __init__(self, x, y):
+        self.rect = pygame.Rect(x, y, PADDLE_WIDTH, PADDLE_HEIGHT)
+
+    def move(self, y):
+        self.rect.y += y
+        # Ensure the paddle stays within the screen boundaries
+        self.rect.y = max(0, min(HEIGHT - PADDLE_HEIGHT, self.rect.y))
+
+    def draw(self):
+        pygame.draw.rect(screen, WHITE, self.rect)
+
 
 class Puck:
     def __init__(self, x, y):
@@ -39,6 +53,8 @@ class Puck:
 
 
 def game_loop():
+    paddle_left = Paddle(50, HEIGHT // 2 - PADDLE_HEIGHT // 2)
+    paddle_right = Paddle(WIDTH - 50 - PADDLE_WIDTH, HEIGHT // 2 - PADDLE_HEIGHT // 2)
     puck = Puck(WIDTH // 2 - PUCK_RADIUS, HEIGHT // 2 - PUCK_RADIUS)
 
     while True:
@@ -48,12 +64,25 @@ def game_loop():
                 sys.exit()
 
         keys = pygame.key.get_pressed()
+        # Move the left paddle
+        if keys[pygame.K_w]:
+            paddle_left.move(-5)
+        if keys[pygame.K_s]:
+            paddle_left.move(5)
 
-        # Move the ball
+        # Move the right paddle (for a two-player game)
+        if keys[pygame.K_UP]:
+            paddle_right.move(-5)
+        if keys[pygame.K_DOWN]:
+            paddle_right.move(5)
+
+        # Move the puck
         puck.move()
 
         # Draw everything
         screen.fill(BLACK)
+        paddle_left.draw()
+        paddle_right.draw()
         puck.draw()
 
         pygame.display.flip()
