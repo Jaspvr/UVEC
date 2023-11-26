@@ -8,6 +8,7 @@ pygame.init()
 WIDTH, HEIGHT = 800, 600
 PUCK_RADIUS = 15
 PADDLE_WIDTH, PADDLE_HEIGHT = 15, 100
+
 FPS = 60
 
 # Colors
@@ -51,11 +52,24 @@ class Puck:
     def draw(self):
         pygame.draw.circle(screen, WHITE, self.rect.center, PUCK_RADIUS)
 
+class Goal:
+    def __init__(self, x, y):
+        self.rect = pygame.Rect(x, y, PUCK_RADIUS * 2, PUCK_RADIUS * 2)
+        self.speed = [random.choice([-5, 5]), random.choice([-5, 5])]
+    
+    def draw(self):
+        pygame.draw.circle(screen, WHITE, self.rect.center, PUCK_RADIUS)
+
 
 def game_loop():
     paddle_left = Paddle(50, HEIGHT // 2 - PADDLE_HEIGHT // 2)
     paddle_right = Paddle(WIDTH - 50 - PADDLE_WIDTH, HEIGHT // 2 - PADDLE_HEIGHT // 2)
     puck = Puck(WIDTH // 2 - PUCK_RADIUS, HEIGHT // 2 - PUCK_RADIUS)
+
+    # Scores
+    score_left = 0
+    score_right = 0
+    font = pygame.font.Font(None, 36)
 
     while True:
         for event in pygame.event.get():
@@ -79,11 +93,26 @@ def game_loop():
         # Move the puck
         puck.move()
 
+        # Score logic
+        # Make it so only goes in on goal for certain height and left of screen
+        if puck.rect.left < 0 and (puck.rect.top< HEIGHT//2 +100 and puck.rect.top> HEIGHT//2 -100):
+            score_right += 1
+            #Reset location to the middle
+            puck.rect.x = WIDTH // 2 - PUCK_RADIUS
+        elif puck.rect.right > WIDTH and (puck.rect.top< HEIGHT//2 +100 and puck.rect.top> HEIGHT//2 -100):
+            score_left += 1
+            #Reset location to the middle
+            puck.rect.x = WIDTH // 2 - PUCK_RADIUS
+
         # Draw everything
         screen.fill(BLACK)
         paddle_left.draw()
         paddle_right.draw()
         puck.draw()
+
+        # Draw the score:
+        score_display = font.render(f"{score_left} - {score_right}", True, WHITE)
+        screen.blit(score_display, (WIDTH // 2 - 50, 20))
 
         pygame.display.flip()
         clock.tick(FPS)
