@@ -1,6 +1,8 @@
 import pygame
 import sys
 import random
+import math
+import pygame.time
 # start this pygame thing
 pygame.init()
 
@@ -10,6 +12,7 @@ PUCK_RADIUS = 15
 PADDLE_RADIUS = 30
 #PADDLE_WIDTH, PADDLE_HEIGHT = 15, 100
 GOAL_WIDTH, GOAL_HEIGHT = 10, 200
+cooldown = 100
 FPS = 60
 
 # Colors
@@ -57,6 +60,8 @@ class Puck:
   def __init__(self, x, y):
     self.rect = pygame.Rect(x, y, PUCK_RADIUS * 2, PUCK_RADIUS * 2)
     self.speed = [random.choice([-5, 5]), random.choice([-5, 5])]
+    #for ensuring multiple calls do not occur in a row
+    self.last_collision = 0
 
   def move(self):
     self.rect.x += self.speed[0]
@@ -82,16 +87,73 @@ class Goal:
     pygame.draw.rect(screen, PASTEL_RED, self.rect)
 
 
-def collision(puck, paddle_left, paddle_right):
-    in_x_range_pl = paddle_left.rect.right > puck.rect.left > paddle_left.rect.left
-    in_y_range_pl = paddle_left.rect.bottom > puck.rect.top > paddle_left.rect.top
-    in_x_range_pr = paddle_right.rect.left < puck.rect.right < paddle_right.rect.right
-    in_y_range_pr = paddle_right.rect.bottom > puck.rect.top > paddle_right.rect.top
+# def collision(puck, paddle_left, paddle_right):
+#     in_x_range_pl = paddle_left.rect.right > puck.rect.left > paddle_left.rect.left
+#     in_y_range_pl = paddle_left.rect.bottom > puck.rect.top > paddle_left.rect.top
+#     in_x_range_pr = paddle_right.rect.left < puck.rect.right < paddle_right.rect.right
+#     in_y_range_pr = paddle_right.rect.bottom > puck.rect.top > paddle_right.rect.top
 
-    # If a collision occurs, reverse the direction of the puck
-    if (in_x_range_pl and in_y_range_pl) or (in_x_range_pr and in_y_range_pr):
-        puck.speed[1] = -puck.speed[1]
-        puck.speed[0] = -puck.speed[0]
+#     # If a collision occurs, reverse the direction of the puck
+#     if (in_x_range_pl and in_y_range_pl) or (in_x_range_pr and in_y_range_pr):
+#         puck.speed[1] = -puck.speed[1]
+#         puck.speed[0] = -puck.speed[0]
+
+
+
+def collision(puck, paddle_left, paddle_right):
+    # Get the current time to ensure we can't call this function multiple times in a row
+    current_time = pygame.time.get_ticks() 
+
+    # If we called it too recently, then exit. Note it is 100 milliseconds
+    if(current_time - puck.last_collision < cooldown):
+        print('too small')
+        return
+    print('made it past')
+    # Calculate the distance between the centers of the paddles with the puck
+    distance_left = math.sqrt((paddle_left.rect.centerx - puck.rect.centerx)**2 + (paddle_left.rect.centery - puck.rect.centery)**2)
+    distance_right = math.sqrt((paddle_right.rect.centerx - puck.rect.centerx)**2 + (paddle_right.rect.centery - puck.rect.centery)**2)
+
+    # Sum of radii
+    sum_of_radii = PADDLE_RADIUS + PUCK_RADIUS
+
+    # Check collision with left paddle
+    if distance_left < sum_of_radii:
+        # normal vector = (x, y) of 
+        normal = [paddle_left.rect.centerx - puck.rect.centerx, paddle_left.rect.centery - puck.rect.centery]
+        # Normalize the normal vector
+        length = math.sqrt(normal[0]**2 + normal[1]**2)
+        if length != 0:
+            normal[0] /= length
+            normal[1] /= length
+        # Reflect the speed vector
+        dot_product = puck.speed[0] * normal[0] + puck.speed[1] * normal[1]
+        puck.speed = [puck.speed[0] - 2 * dot_product * normal[0],
+                      puck.speed[1] - 2 * dot_product * normal[1]]
+        # Set the collision time:
+        puck.last_collision = current_time
+
+    # Check collision with right paddle
+    elif distance_right < sum_of_radii:
+        # Calculate the normal vector
+        normal = [paddle_right.rect.centerx - puck.rect.centerx, paddle_right.rect.centery - puck.rect.centery]
+        # Normalize the normal vector
+        length = math.sqrt(normal[0]**2 + normal[1]**2)
+        if length != 0:
+            normal[0] /= length
+            normal[1] /= length
+        # Reflect the speed vector
+        dot_product = puck.speed[0] * normal[0] + puck.speed[1] * normal[1]
+        puck.speed = [puck.speed[0] - 2 * dot_product * normal[0],
+                      puck.speed[1] - 2 * dot_product * normal[1]]
+        # Set the collision time:
+        puck.last_collision = current_time
+        
+    
+
+
+
+
+
 
 
 
