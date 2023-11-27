@@ -3,25 +3,17 @@ import sys
 import random
 import math
 import pygame.time
-# start this pygame thing
 pygame.init()
 
 # Constants
 WIDTH, HEIGHT = 800, 600
-PUCK_RADIUS = 15
+PUCK_RADIUS = 18
 PADDLE_RADIUS = 30
-#PADDLE_WIDTH, PADDLE_HEIGHT = 15, 100
-GOAL_WIDTH, GOAL_HEIGHT = 10, 200
+GOAL_WIDTH, GOAL_HEIGHT = 10, 120
 cooldown = 250
 FPS = 60
-
-#Logo stuff
-#image_path = "logo.png"
-#image = pygame.image.load(image_path)
-#image_rect = image.get_rect()
-
-logo_width, logo_height = 150, 150
-
+PUCK_SPEED = 6
+PADDLE_SPEED = 6
 # Colors
 WHITE = (255, 255, 255)
 BLUE = (77, 140, 255)
@@ -29,13 +21,12 @@ GREEN = (0, 255, 100)
 RED = (255, 0, 80)
 DARK_GREY = (10, 10, 10)
 LIGHT_GREY = (150, 150, 150)
-LIGHT_PURPLE = (220, 150, 220)
+LIGHT_PURPLE = (220, 150, 230)
 YELLOW = (240, 230, 0)
 MIDNIGHT_BLUE = (10, 0, 100)
 BURGUNDY = (150, 0, 20)
 BLACK = (0, 0, 0)
 PASTEL_RED = (255, 150, 150)
-
 # Initialize the game window
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Air Hockey")
@@ -62,18 +53,15 @@ class Paddle:
                         min(WIDTH - (PADDLE_RADIUS * 2), self.rect.x))
 
   def draw(self, colour):
-    #pygame.draw.rect(screen, WHITE, self.rect)
-    pygame.draw.circle(screen, colour, self.rect.center, PADDLE_RADIUS)
-
-
-#    pygame.draw.circle(screen, WHITE, self.rect.center, PADDLE_RADIUS)
+    pygame.draw.circle(screen, WHITE, self.rect.center, PADDLE_RADIUS)
+    pygame.draw.circle(screen, colour, self.rect.center, PADDLE_RADIUS - 3)
 
 
 class Puck:
 
   def __init__(self, x, y):
     self.rect = pygame.Rect(x, y, PUCK_RADIUS * 2, PUCK_RADIUS * 2)
-    self.speed = [random.choice([-5, 5]), random.choice([-5, 5])]
+    self.speed = [random.choice([-PUCK_SPEED, PUCK_SPEED]), random.choice([-PUCK_SPEED, PUCK_SPEED])]
     self.last_collision = 0
 
   def move(self):
@@ -87,7 +75,8 @@ class Puck:
       self.speed[1] = -self.speed[1]
 
   def draw(self, colour):
-    pygame.draw.circle(screen, colour, self.rect.center, PUCK_RADIUS)
+    pygame.draw.circle(screen, WHITE, self.rect.center, PUCK_RADIUS)
+    pygame.draw.circle(screen, colour, self.rect.center, PUCK_RADIUS - 3)
 
 
 class Goal:
@@ -95,26 +84,44 @@ class Goal:
   def __init__(self, x, y):
     self.rect = pygame.Rect(x, y, GOAL_WIDTH, GOAL_HEIGHT)
 
-  #def draw(self):
-  #pygame.draw.rect(screen, PASTEL_RED, self.rect)
 
-
-def set_lines(dot_colour, line_colour):
+def set_lines(dot_colour, line_colour, background_colour1, background_colour2):
   screen.fill(BLACK)
   for x in range(0, WIDTH, 30):
     for y in range(0, HEIGHT, 30):
       pygame.draw.rect(screen, dot_colour, (x, y, 1, 1))
+
+  pygame.draw.circle(screen, background_colour1, (-1, HEIGHT / 2), 120, 4)
+  pygame.draw.circle(screen, background_colour2, (1, HEIGHT / 2), 120, 4)
   pygame.draw.circle(screen, line_colour, (0, HEIGHT / 2), 120, 4)
+  pygame.draw.circle(screen, background_colour1, (WIDTH - 1, HEIGHT / 2), 120, 4)
+  pygame.draw.circle(screen, background_colour2, (WIDTH + 1, HEIGHT / 2), 120, 4)
   pygame.draw.circle(screen, line_colour, (WIDTH, HEIGHT / 2), 120, 4)
+  pygame.draw.circle(screen, background_colour1, (WIDTH / 2 - 1, HEIGHT / 2), 120, 4)
+  pygame.draw.circle(screen, background_colour2, (WIDTH / 2 + 1, HEIGHT / 2), 120, 4)
   pygame.draw.circle(screen, line_colour, (WIDTH / 2, HEIGHT / 2), 120, 4)
+  pygame.draw.rect(screen, background_colour1, (-6, HEIGHT / 2 - 65, 20, 130), 4)
+  pygame.draw.rect(screen, background_colour2, (-4, HEIGHT / 2 - 65, 20, 130), 4)
   pygame.draw.rect(screen, line_colour, (-5, HEIGHT / 2 - 65, 20, 130), 4)
-  pygame.draw.rect(screen, line_colour, (WIDTH - 15, HEIGHT / 2 - 65, 20, 130),
-                   4)
-  # Draw a vertical line at the center of the screen
+  pygame.draw.rect(screen, background_colour1, (WIDTH - 16, HEIGHT / 2 - 65, 20, 130), 4)
+  pygame.draw.rect(screen, background_colour2, (WIDTH - 14, HEIGHT / 2 - 65, 20, 130), 4)
+  pygame.draw.rect(screen, line_colour, (WIDTH - 15, HEIGHT / 2 - 65, 20, 130), 4)
   line_width = 3  # You can adjust the width of the line
+  line_start = (WIDTH // 4 - 1, 0)  # Starting point of the line
+  line_end = (WIDTH // 4 - 1, HEIGHT)  # Ending point of the line
+  pygame.draw.line(screen, background_colour1, line_start, line_end, line_width)
+  line_start = (WIDTH // 4 + 1, 0)  # Starting point of the line
+  line_end = (WIDTH // 4 + 1, HEIGHT)  # Ending point of the line
+  pygame.draw.line(screen, background_colour2, line_start, line_end, line_width)
   line_start = (WIDTH // 4, 0)  # Starting point of the line
   line_end = (WIDTH // 4, HEIGHT)  # Ending point of the line
   pygame.draw.line(screen, line_colour, line_start, line_end, line_width)
+  line_start = (3*WIDTH // 4 - 1, 0)  # Starting point of the line
+  line_end = (3*WIDTH // 4 - 1, HEIGHT)  # Ending point of the line
+  pygame.draw.line(screen, background_colour1, line_start, line_end, line_width)
+  line_start = (3*WIDTH // 4 + 1, 0)  # Starting point of the line
+  line_end = (3*WIDTH // 4 + 1, HEIGHT)  # Ending point of the line
+  pygame.draw.line(screen, background_colour2, line_start, line_end, line_width)
   line_start = (3 * WIDTH // 4, 0)  # Starting point of the line
   line_end = (3 * WIDTH // 4, HEIGHT)  # Ending point of the line
   pygame.draw.line(screen, line_colour, line_start, line_end, line_width)
@@ -126,9 +133,9 @@ def collision(puck, paddle_left, paddle_right):
 
   # If we called it too recently, then exit. Note it is 100 milliseconds
   if (current_time - puck.last_collision < cooldown):
-    print('too small')
+#     print('too small')
     return
-  print('made it past')
+#   print('made it past')
   # Calculate the distance between the centers of the paddles with the puck
   distance_left = math.sqrt((paddle_left.rect.centerx - puck.rect.centerx)**2 +
                             (paddle_left.rect.centery - puck.rect.centery)**2)
@@ -183,19 +190,23 @@ def collision(puck, paddle_left, paddle_right):
 
 
 def game_loop():
-  paddle_left = Paddle(50, HEIGHT // 2 - PADDLE_RADIUS * 2 // 2)
-  paddle_right = Paddle(WIDTH - 50 - PADDLE_RADIUS * 2,
-                        HEIGHT // 2 - PADDLE_RADIUS * 2 // 2)
-  puck = Puck(WIDTH // 2 - PUCK_RADIUS, HEIGHT // 2 - PUCK_RADIUS)
 
+  PLAYER1_COLOUR = BLUE
+  PLAYER2_COLOUR = RED
+  PUCK_COLOUR = LIGHT_PURPLE
+  LINE_COLOUR = WHITE
+
+  paddle_left = Paddle(50, HEIGHT // 2 - PADDLE_RADIUS * 2 // 2)
+  paddle_right = Paddle(WIDTH - 50 - PADDLE_RADIUS * 2, HEIGHT // 2 - PADDLE_RADIUS * 2 // 2)
+  puck = Puck(WIDTH // 2 - PUCK_RADIUS, HEIGHT // 2 - PUCK_RADIUS)
   # Initialize the goals
   goal_left = Goal(0, HEIGHT // 2 - GOAL_HEIGHT // 2)
   goal_right = Goal(WIDTH - 10, HEIGHT // 2 - GOAL_HEIGHT // 2)
-
   # Scores
   score_left = 0
   score_right = 0
-  font = pygame.font.Font(None, 36)
+  font = pygame.font.Font(None, 66)
+
 
   while True:
     for event in pygame.event.get():
@@ -206,25 +217,22 @@ def game_loop():
     keys = pygame.key.get_pressed()
     # Move the left paddle
     if keys[pygame.K_w]:
-      paddle_left.move(-5, 0, True)
+      paddle_left.move(-PADDLE_SPEED, 0, True)
     if keys[pygame.K_s]:
-      paddle_left.move(5, 0, True)
-
+      paddle_left.move(PADDLE_SPEED, 0, True)
     if keys[pygame.K_a]:
-      paddle_left.move(0, -5, True)
+      paddle_left.move(0, -PADDLE_SPEED, True)
     if keys[pygame.K_d]:
-      paddle_left.move(0, 5, True)
-
+      paddle_left.move(0, PADDLE_SPEED, True)
       # Move the right paddle (for a two-player game)
     if keys[pygame.K_UP]:
-      paddle_right.move(-5, 0, False)
+      paddle_right.move(-PADDLE_SPEED, 0, False)
     if keys[pygame.K_DOWN]:
-      paddle_right.move(5, 0, False)
-
+      paddle_right.move(PADDLE_SPEED, 0, False)
     if keys[pygame.K_LEFT]:
-      paddle_right.move(0, -5, False)
+      paddle_right.move(0, -PADDLE_SPEED, False)
     if keys[pygame.K_RIGHT]:
-      paddle_right.move(0, 5, False)
+      paddle_right.move(0, PADDLE_SPEED, False)
 
     # Move the puck
     puck.move()
@@ -234,32 +242,26 @@ def game_loop():
 
     # Score logic
     # Make it so only goes in on goal for certain height and left of screen
-    if puck.rect.left < 0 and (puck.rect.top < HEIGHT // 2 + 100
-                               and puck.rect.top > HEIGHT // 2 - 100):
+    if puck.rect.left < 0 and (puck.rect.top < HEIGHT // 2 + 100 and puck.rect.top > HEIGHT // 2 - 100):
       score_right += 1
       #Reset location to the middle
       puck.rect.x = WIDTH // 2 - PUCK_RADIUS
-    elif puck.rect.right > WIDTH and (puck.rect.top < HEIGHT // 2 + 100
-                                      and puck.rect.top > HEIGHT // 2 - 100):
+    elif puck.rect.right > WIDTH and (puck.rect.top < HEIGHT // 2 + 100 and puck.rect.top > HEIGHT // 2 - 100):
       score_left += 1
       #Reset location to the middle
       puck.rect.x = WIDTH // 2 - PUCK_RADIUS
 
     # Colour everything
-    set_lines(LIGHT_GREY, YELLOW)
-    paddle_left.draw(BLUE)
-    paddle_right.draw(RED)
-    puck.draw(LIGHT_PURPLE)
-
-    #Logo stuff
-
-    # scaled_image = pygame.transform.scale(image, (logo_width, logo_height))
-    # scaled_image_rect = scaled_image.get_rect()
-
-    # scaled_image_rect.center = (WIDTH // 2, HEIGHT // 2)
-    # screen.blit(scaled_image, scaled_image_rect)
+    set_lines(WHITE, LINE_COLOUR, PLAYER1_COLOUR, PLAYER2_COLOUR)
+    paddle_left.draw(PLAYER1_COLOUR)
+    paddle_right.draw(PLAYER2_COLOUR)
+    puck.draw(PUCK_COLOUR)
 
     # Draw the score:
+    score_display = font.render(f"{score_left} - {score_right}", True, RED)
+    screen.blit(score_display, (WIDTH // 2 - 48, 22))
+    score_display = font.render(f"{score_left} - {score_right}", True, BLUE)
+    screen.blit(score_display, (WIDTH // 2 - 52, 18))
     score_display = font.render(f"{score_left} - {score_right}", True, WHITE)
     screen.blit(score_display, (WIDTH // 2 - 50, 20))
 
